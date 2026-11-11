@@ -122,7 +122,17 @@ def port(src):
     if "NSString" in t or "[NS" in t:
         fail("Objective-C left over: " + t[t.find("NS") - 40: t.find("NS") + 40])
 
+    # 7a. Emulator fix: a block whose 16-bit ID is not registered (e.g. the mod that added it
+    # was removed) is the block of its low byte, as everywhere else (getBlock, getBlockAndData);
+    # otherwise the callbacks call onRemove on a null Block* when it is replaced.
+    t = replace_once(t,
+                     "\tuint16_t oldId = (uint16_t)(c[0xA88 + idx] | (c[kChunkHiOffset + idx] << 8));\n",
+                     "\tuint16_t oldId = (uint16_t)(c[0xA88 + idx] | (c[kChunkHiOffset + idx] << 8));\n"
+                     "\tif (oldId > 255 && !gBlockTable16[oldId]) oldId &= 0xFF;   // port: unregistered -> low byte\n",
+                     "setBlockAndData: unregistered old ID")
+
     # 7. Logos constructor
+
     t = replace_once(t, "%ctor {", "__attribute__((constructor)) static void neid_ctor() {", "%ctor")
     if re.search(r"^%", t, re.M):
         fail("Logos directive left over")

@@ -1717,6 +1717,7 @@ extern "C" __attribute__((used)) void neid_LevelChunk_setBlockAndData(void* chun
 	const uint32_t idx = (uint32_t)y + ((z + x * 16) << 7);
 
 	uint16_t oldId = (uint16_t)(c[0xA88 + idx] | (c[kChunkHiOffset + idx] << 8));
+	if (oldId > 255 && !gBlockTable16[oldId]) oldId &= 0xFF;   // port: unregistered -> low byte
 	uint8_t nib = c[0x8A88 + (idx >> 1)];
 	uint8_t oldData = (idx & 1) ? (nib >> 4) : (nib & 0xF);
 
